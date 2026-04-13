@@ -3,405 +3,266 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Word Recall Pro</title>
+    <title>WordRecall Mini (4 Words)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --primary: #6366f1;
-            --primary-dark: #4f46e5;
-            --bg: #f1f5f9;
-            --text: #0f172a;
-            --card: #ffffff;
-            --success: #22c55e;
-            --error: #ef4444;
-            --whatsapp: #25d366;
-        }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background: var(--bg);
-            color: var(--text);
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: #f8fafc; 
+            overflow: hidden; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            padding: 15px;
         }
-        #game-container {
-            width: 100%;
-            max-width: 400px;
-            background: var(--card);
-            padding: 20px;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
-            height: fit-content;
-        }
-        .hidden { display: none !important; }
+        .word-chip { background: #eef2ff; color: #4338ca; border: 2px solid #c7d2fe; }
+        .btn-action { transition: transform 0.1s; touch-action: manipulation; }
+        .btn-action:active { transform: scale(0.96); }
+        input:focus { outline: none; border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99,102,241,0.2); }
         
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        h2 { margin: 0; font-size: 1.25rem; font-weight: 800; color: var(--primary); }
+        /* Dynamic Input States */
+        .input-correct { border-color: #10b981 !important; background-color: #ecfdf5 !important; color: #065f46; }
+        .input-wrong { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b; }
         
-        .settings-box {
-            background: #f8fafc;
-            padding: 15px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            border: 1px solid #e2e8f0;
+        .shake { animation: shake 0.4s ease-in-out; }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
         }
-        .settings-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-            font-size: 0.9rem;
-        }
-        .settings-row:last-child { margin-bottom: 0; }
-        select {
-            padding: 5px;
-            border-radius: 6px;
-            border: 1px solid #cbd5e1;
-        }
-
-        .word-display {
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: var(--text);
-            text-align: center;
-            margin: 30px 0;
-            line-height: 1.6;
-            background: #eef2ff;
-            padding: 20px;
-            border-radius: 12px;
-            border: 2px dashed var(--primary);
-        }
-        .timer-circle {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            border: 4px solid var(--primary);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 10px;
-            font-weight: 800;
-            font-size: 1.2rem;
-            color: var(--primary);
-        }
-
-        #input-grid {
-            display: grid;
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-        .input-wrapper {
-            position: relative;
-        }
-        input {
-            width: 100%;
-            padding: 14px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 16px;
-            outline: none;
-            transition: all 0.3s;
-        }
-        input:focus { border-color: var(--primary); }
-        input.correct { border-color: var(--success); background-color: #f0fdf4; }
-        input.wrong { border-color: var(--error); background-color: #fef2f2; }
-
-        .feedback-label {
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-top: 4px;
-            display: block;
-        }
-        .text-success { color: var(--success); }
-        .text-error { color: var(--error); }
-
-        button {
-            width: 100%;
-            padding: 14px;
-            margin-top: 10px;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: transform 0.1s, filter 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        button:active { transform: scale(0.98); }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-giveup { background: #fee2e2; color: #b91c1c; margin-top: 15px; }
-        .btn-whatsapp { background: var(--whatsapp); color: white; }
-
-        #leaderboard {
-            margin-top: 25px;
-            padding-top: 20px;
-            border-top: 2px solid #f1f5f9;
-        }
-        .score-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 8px 0;
-            font-size: 0.85rem;
-            border-bottom: 1px solid #f8fafc;
-        }
-        .score-val { font-weight: 700; color: var(--primary); }
     </style>
 </head>
-<body>
+<body class="p-2">
 
-<div id="game-container">
-    <header>
-        <h2>WORD RECALL</h2>
-        <div id="score-tally" style="font-size: 0.8rem; font-weight: 600;">Total Pts: 0</div>
-    </header>
-    
-    <div id="start-screen">
-        <div class="settings-box">
-            <div class="settings-row">
-                <span>Number of words:</span>
-                <select id="setting-count">
-                    <option value="3">3 Words</option>
-                    <option value="4">4 Words</option>
-                    <option value="5">5 Words</option>
-                    <option value="6">6 Words</option>
-                </select>
-            </div>
-            <div class="settings-row">
-                <span>Time to memorize:</span>
-                <select id="setting-time">
-                    <option value="3">3 Seconds</option>
-                    <option value="5" selected>5 Seconds</option>
-                    <option value="8">8 Seconds</option>
-                    <option value="12">12 Seconds</option>
-                </select>
+    <div id="main-card" class="w-full max-w-[320px] bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
+        <!-- Header -->
+        <div class="bg-indigo-600 p-3 text-white flex justify-between items-center">
+            <h1 class="font-bold text-lg">WordRecall</h1>
+            <div class="flex gap-2">
+                <div class="text-[10px] font-mono bg-indigo-500 px-2 py-1 rounded">
+                    Round: <span id="stat-round">1</span>/3
+                </div>
+                <div class="text-[10px] font-mono bg-indigo-500 px-2 py-1 rounded">
+                    Score: <span id="stat-streak">0</span>
+                </div>
             </div>
         </div>
-        <button class="btn-primary" id="main-action-btn" onclick="startGame()">START ROUND</button>
-    </div>
 
-    <!-- Phase 1: Memorize -->
-    <div id="memorize-phase" class="hidden">
-        <div class="timer-circle" id="timer-display">5</div>
-        <div class="word-display" id="word-list-ui"></div>
-        <p style="text-align:center; font-size: 0.8rem; color: #64748b;">Memorize now...</p>
-    </div>
+        <div class="p-4">
+            <!-- View: Study -->
+            <div id="view-study" class="space-y-4">
+                <div id="word-container" class="grid grid-cols-2 gap-2 min-h-[140px] flex items-center">
+                    <div class="col-span-2 text-center text-gray-400 italic text-sm py-8 border-2 border-dashed rounded-xl w-full">
+                        Tap Generate
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <button onclick="generate()" class="btn-action bg-gray-100 text-gray-700 font-bold py-3 rounded-xl text-sm border-b-4 border-gray-300">
+                        GENERATE
+                    </button>
+                    <button id="btn-ready" onclick="goTest()" disabled class="btn-action bg-indigo-600 text-white font-bold py-3 rounded-xl text-sm border-b-4 border-indigo-800 opacity-30">
+                        TEST ME
+                    </button>
+                </div>
+            </div>
 
-    <!-- Phase 2: Recall -->
-    <div id="recall-phase" class="hidden">
-        <div id="input-grid"></div>
-        <div id="recall-actions">
-            <button class="btn-primary" id="submit-btn" onclick="checkAnswers()">SUBMIT ANSWERS</button>
-            <button class="btn-outline" id="hint-btn" onclick="showHint()">USE HINT</button>
-            <button class="btn-giveup" id="giveup-btn" onclick="giveUp()">GIVE UP</button>
+            <!-- View: Test -->
+            <div id="view-test" class="hidden space-y-3">
+                <div class="grid grid-cols-1 gap-2">
+                    <input type="text" id="in-0" placeholder="Word 1" class="w-full p-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-center font-bold transition-all duration-200">
+                    <input type="text" id="in-1" placeholder="Word 2" class="w-full p-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-center font-bold transition-all duration-200">
+                    <input type="text" id="in-2" placeholder="Word 3" class="w-full p-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-center font-bold transition-all duration-200">
+                    <input type="text" id="in-3" placeholder="Word 4" class="w-full p-2.5 bg-gray-50 border-2 border-gray-200 rounded-xl text-center font-bold transition-all duration-200">
+                </div>
+                
+                <div class="flex flex-col gap-2">
+                    <button onclick="check()" class="btn-action w-full bg-emerald-500 text-white font-black py-4 rounded-xl shadow-lg border-b-4 border-emerald-700">
+                        CHECK ANSWERS
+                    </button>
+                    <button id="btn-hint" onclick="giveHint()" class="hidden btn-action w-full bg-amber-100 text-amber-700 font-bold py-2 rounded-lg text-xs border border-amber-200">
+                        💡 NEED A HINT?
+                    </button>
+                </div>
+            </div>
+
+            <!-- View: Round Success -->
+            <div id="view-success" class="hidden text-center py-4 space-y-4">
+                <div class="text-5xl">✅</div>
+                <h2 class="text-xl font-bold text-emerald-600">Round Complete!</h2>
+                <button onclick="nextRound()" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl">Next Round</button>
+            </div>
+
+            <!-- View: Final Results -->
+            <div id="view-final" class="hidden text-center py-4 space-y-4">
+                <div class="text-5xl">🏆</div>
+                <h2 class="text-xl font-bold text-indigo-600">Game Over!</h2>
+                <div class="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                    <p class="text-gray-500 text-sm uppercase font-bold tracking-widest">Final Score</p>
+                    <p class="text-4xl font-black text-gray-800"><span id="final-score">0</span>/3</p>
+                </div>
+                
+                <div class="space-y-2 pt-2">
+                    <button onclick="shareToWhatsapp()" class="w-full bg-[#25D366] text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 shadow-md">
+                        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.319 1.592 5.548 0 10.058-4.51 10.06-10.059.002-2.689-1.047-5.215-2.951-7.121-1.905-1.906-4.432-2.956-7.123-2.956-5.549 0-10.059 4.511-10.061 10.06-.001 2.032.547 3.513 1.574 5.228l-1.017 3.705 3.832-1.006zm10.968-7.41c-.3-.15-1.771-.874-2.046-.974-.275-.101-.475-.15-.675.15-.2.301-.774.974-.949 1.174-.175.2-.35.225-.65.075-.3-.15-1.265-.467-2.41-1.485-.89-.793-1.49-1.773-1.665-2.074-.175-.3-.019-.461.13-.611.135-.134.3-.351.45-.526.15-.175.2-.301.3-.501.1-.2.05-.375-.025-.526-.075-.15-.675-1.626-.925-2.227-.244-.588-.492-.508-.675-.517-.175-.008-.375-.01-.575-.01s-.525.075-.8.376c-.275.301-1.05 1.026-1.05 2.504 0 1.478 1.075 2.906 1.225 3.106.15.2 2.115 3.23 5.124 4.527.715.309 1.273.494 1.708.633.718.227 1.371.195 1.887.118.574-.085 1.771-.724 2.021-1.426.25-.702.25-1.303.175-1.426-.075-.124-.275-.199-.575-.349z"/></svg>
+                        Share Result
+                    </button>
+                    <button onclick="fullReset()" class="w-full bg-gray-100 text-gray-600 font-bold py-3 rounded-xl text-sm">
+                        Play Again
+                    </button>
+                </div>
+            </div>
         </div>
-        <!-- Result screen actions -->
-        <div id="review-actions" class="hidden">
-            <button class="btn-whatsapp" id="share-btn" onclick="shareOnWhatsApp()">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.937 3.659 1.432 5.631 1.433h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
-                SHARE ON WHATSAPP
-            </button>
-            <button class="btn-primary" id="next-btn" onclick="resetToStart()">NEXT ROUND</button>
+
+        <!-- Mini Footer -->
+        <div id="msg" class="h-8 bg-gray-50 text-[10px] flex items-center justify-center uppercase tracking-widest text-gray-400 font-bold border-t border-gray-100">
+            Ready to play?
         </div>
     </div>
 
-    <div id="leaderboard">
-        <div style="font-weight: 800; font-size: 0.75rem; color: #94a3b8; text-transform: uppercase; margin-bottom: 10px;">Recent Rounds</div>
-        <div id="score-list"></div>
-    </div>
-</div>
+    <script>
+        const words = ["Apple", "Book", "Desk", "Cat", "Sun", "Moon", "Bread", "Door", "Lamp", "Pen", "Bird", "Tree", "Fish", "Blue", "Gold", "Key", "Milk", "Rain", "Star", "Cake", "Hat", "Ring", "Ball", "Cloud", "Leaf", "Fire", "Snow", "Wind", "Road", "Boat", "Frog", "Shoe", "Cup", "Box"];
+        let target = [];
+        let score = 0;
+        let currentRound = 1;
+        const totalRounds = 3;
+        const wordsPerRound = 4;
 
-<script>
-    const wordBank = ["Silver", "Jaguar", "Horizon", "Nebula", "Coffee", "Pencil", "Travel", "Museum", "Diamond", "Forest", "Bridge", "Planet", "Rocket", "Canvas", "Guitar", "Marble", "Falcon", "Summer", "Window", "Dragon", "Castle", "Ocean", "Spirit", "Mirror", "Hammer", "Island", "Bottle", "Pocket", "Garden", "Winter", "Anchor", "Breeze", "Cactus", "Desert", "Eagle", "Flame", "Glacier", "Honey", "Indigo", "Jungle"];
-    
-    let usedWords = new Set();
-    let currentWords = [];
-    let totalScore = 0;
-    let config = { count: 3, time: 5 };
-    let lastRoundStats = { score: 0, max: 0 };
-
-    function startGame() {
-        config.count = parseInt(document.getElementById('setting-count').value);
-        config.time = parseInt(document.getElementById('setting-time').value);
-
-        if (wordBank.length - usedWords.size < config.count) {
-            usedWords.clear();
+        function setMsg(txt, color='text-gray-400') {
+            const m = document.getElementById('msg');
+            m.innerText = txt;
+            m.className = `h-8 bg-gray-50 text-[10px] flex items-center justify-center uppercase tracking-widest font-bold border-t border-gray-100 ${color}`;
         }
 
-        currentWords = [];
-        let available = wordBank.filter(w => !usedWords.has(w));
-        for(let i = 0; i < config.count; i++) {
-            let idx = Math.floor(Math.random() * available.length);
-            let word = available.splice(idx, 1)[0];
-            currentWords.push(word);
+        function generate() {
+            target = [...words].sort(() => 0.5 - Math.random()).slice(0, wordsPerRound);
+            const container = document.getElementById('word-container');
+            container.innerHTML = target.map(w => `
+                <div class="word-chip py-3 px-1 rounded-xl text-center text-lg font-black uppercase tracking-tight shadow-sm">
+                    ${w}
+                </div>
+            `).join('');
+            
+            const btn = document.getElementById('btn-ready');
+            btn.disabled = false;
+            btn.classList.remove('opacity-30');
+            document.getElementById('btn-hint').classList.add('hidden');
+            setMsg(`Round ${currentRound}: Memorize!`);
         }
 
-        document.getElementById('start-screen').classList.add('hidden');
-        document.getElementById('recall-phase').classList.add('hidden');
-        document.getElementById('memorize-phase').classList.remove('hidden');
-        document.getElementById('review-actions').classList.add('hidden');
-        document.getElementById('recall-actions').classList.remove('hidden');
-        
-        document.getElementById('word-list-ui').innerHTML = currentWords.join("<br>");
-        
-        startTimer(config.time);
-    }
+        function goTest() {
+            document.getElementById('view-study').classList.add('hidden');
+            document.getElementById('view-test').classList.remove('hidden');
+            document.getElementById('in-0').focus();
+            setMsg("Enter the 4 words");
+        }
 
-    function startTimer(seconds) {
-        let timeLeft = seconds;
-        const display = document.getElementById('timer-display');
-        display.innerText = timeLeft;
-        
-        const countdown = setInterval(() => {
-            timeLeft--;
-            display.innerText = timeLeft;
-            if (timeLeft <= 0) {
-                clearInterval(countdown);
-                showRecallPhase();
-            }
-        }, 1000);
-    }
-
-    function showRecallPhase() {
-        const grid = document.getElementById('input-grid');
-        grid.innerHTML = '';
-        currentWords.forEach((_, i) => {
-            const wrapper = document.createElement('div');
-            wrapper.className = 'input-wrapper';
+        function check() {
+            const inputs = [
+                document.getElementById('in-0'),
+                document.getElementById('in-1'),
+                document.getElementById('in-2'),
+                document.getElementById('in-3')
+            ];
             
-            const input = document.createElement('input');
-            input.type = 'text';
-            input.id = `ans${i}`;
-            input.placeholder = `Word ${i+1}`;
-            input.autocomplete = 'off';
-            input.autocapitalize = 'none';
-            
-            const feedback = document.createElement('span');
-            feedback.id = `feedback${i}`;
-            feedback.className = 'feedback-label hidden';
-            
-            wrapper.appendChild(input);
-            wrapper.appendChild(feedback);
-            grid.appendChild(wrapper);
-        });
+            const correctWords = target.map(w => w.toLowerCase());
+            let allRight = true;
 
-        document.getElementById('memorize-phase').classList.add('hidden');
-        document.getElementById('recall-phase').classList.remove('hidden');
-        document.getElementById('ans0').focus();
-    }
+            inputs.forEach((input, idx) => {
+                const val = input.value.trim().toLowerCase();
+                if (val === correctWords[idx]) {
+                    input.classList.remove('input-wrong');
+                    input.classList.add('input-correct');
+                } else {
+                    input.classList.remove('input-correct');
+                    input.classList.add('input-wrong');
+                    allRight = false;
+                }
+            });
 
-    function checkAnswers() {
-        let correctCount = 0;
-
-        currentWords.forEach((word, i) => {
-            const input = document.getElementById(`ans${i}`);
-            const feedback = document.getElementById(`feedback${i}`);
-            let userVal = input.value.trim().toLowerCase();
-            
-            input.disabled = true;
-            feedback.classList.remove('hidden');
-
-            if (userVal === word.toLowerCase()) {
-                correctCount++;
-                usedWords.add(word);
-                input.classList.add('correct');
-                feedback.innerText = "✓ Correct";
-                feedback.className = "feedback-label text-success";
+            if (allRight) {
+                score++;
+                document.getElementById('stat-streak').innerText = score;
+                document.getElementById('view-test').classList.add('hidden');
+                
+                if (currentRound >= totalRounds) {
+                    showFinalResults();
+                } else {
+                    document.getElementById('view-success').classList.remove('hidden');
+                    setMsg("Round passed!", "text-emerald-600");
+                }
             } else {
-                input.classList.add('wrong');
-                feedback.innerText = `✗ Should be: ${word}`;
-                feedback.className = "feedback-label text-error";
+                setMsg("Fix the red boxes!", "text-red-500");
+                document.getElementById('main-card').classList.add('shake');
+                setTimeout(() => document.getElementById('main-card').classList.remove('shake'), 400);
+                document.getElementById('btn-hint').classList.remove('hidden');
             }
-        });
+        }
 
-        totalScore += correctCount;
-        lastRoundStats = { score: correctCount, max: config.count };
-        updateTotalUI();
-        saveRound(correctCount, config.count);
-        
-        document.getElementById('recall-actions').classList.add('hidden');
-        document.getElementById('review-actions').classList.remove('hidden');
-    }
+        function giveHint() {
+            target.forEach((word, idx) => {
+                const input = document.getElementById(`in-${idx}`);
+                if (!input.value || input.classList.contains('input-wrong')) {
+                    input.placeholder = `Starts with "${word[0].toUpperCase()}"...`;
+                }
+            });
+            setMsg("Hints added!", "text-amber-600");
+        }
 
-    function shareOnWhatsApp() {
-        const dateStr = new Date().toLocaleDateString();
-        const emoji = lastRoundStats.score === lastRoundStats.max ? "🧠🔥" : "🎮";
-        const text = `Word Recall Pro Results (${dateStr})\n\nScore: ${lastRoundStats.score}/${lastRoundStats.max} ${emoji}\nDifficulty: ${config.count} words / ${config.time}s\nTotal Points: ${totalScore}\n\nCan you beat my memory?`;
-        
-        const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`;
-        window.open(url, '_blank');
-    }
+        function nextRound() {
+            currentRound++;
+            document.getElementById('stat-round').innerText = currentRound;
+            document.getElementById('view-success').classList.add('hidden');
+            resetTestInputs();
+            document.getElementById('view-study').classList.remove('hidden');
+            generate();
+        }
 
-    function showHint() {
-        currentWords.forEach((word, i) => {
-            const input = document.getElementById(`ans${i}`);
-            if (!input.value) {
-                input.value = word[0].toUpperCase() + "...";
-                input.style.color = "#6366f1";
-            }
-        });
-    }
+        function showFinalResults() {
+            document.getElementById('final-score').innerText = score;
+            document.getElementById('view-test').classList.add('hidden');
+            document.getElementById('view-success').classList.add('hidden');
+            document.getElementById('view-final').classList.remove('hidden');
+            setMsg("Game Finished!", "text-indigo-600");
+        }
 
-    function giveUp() {
-        currentWords.forEach((word, i) => {
-            const input = document.getElementById(`ans${i}`);
-            const feedback = document.getElementById(`feedback${i}`);
-            input.disabled = true;
-            input.classList.add('wrong');
-            feedback.classList.remove('hidden');
-            feedback.innerText = `Word: ${word}`;
-            feedback.className = "feedback-label text-error";
-        });
-        
-        lastRoundStats = { score: 0, max: config.count };
-        saveRound(0, config.count);
-        document.getElementById('recall-actions').classList.add('hidden');
-        document.getElementById('review-actions').classList.remove('hidden');
-    }
+        function resetTestInputs() {
+            const inputs = document.querySelectorAll('#view-test input');
+            inputs.forEach(i => {
+                i.value = '';
+                const idx = parseInt(i.id.split('-')[1]) + 1;
+                i.placeholder = `Word ${idx}`;
+                i.classList.remove('input-correct', 'input-wrong');
+            });
+        }
 
-    function resetToStart() {
-        document.getElementById('recall-phase').classList.add('hidden');
-        document.getElementById('start-screen').classList.remove('hidden');
-    }
+        function fullReset() {
+            score = 0;
+            currentRound = 1;
+            document.getElementById('stat-streak').innerText = score;
+            document.getElementById('stat-round').innerText = currentRound;
+            document.getElementById('view-final').classList.add('hidden');
+            document.getElementById('view-study').classList.remove('hidden');
+            resetTestInputs();
+            generate();
+        }
 
-    function updateTotalUI() {
-        document.getElementById('score-tally').innerText = `Total Pts: ${totalScore}`;
-    }
+        function shareToWhatsapp() {
+            const date = new Date().toLocaleDateString();
+            const text = `🧠 WordRecall Result (${date})\n\nChallenge: 4 words per round\nScore: ${score}/${totalRounds} perfect!\n\nCan you beat my memory?`;
+            const url = `whatsapp://send?text=${encodeURIComponent(text)}`;
+            window.location.href = url;
+            
+            setTimeout(() => {
+                const webUrl = `https://web.whatsapp.com/send?text=${encodeURIComponent(text)}`;
+                window.open(webUrl, '_blank');
+            }, 100);
+        }
 
-    function saveRound(pts, total) {
-        const history = JSON.parse(localStorage.getItem('recallHistory') || "[]");
-        history.unshift({ 
-            time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), 
-            score: pts, 
-            max: total 
-        });
-        localStorage.setItem('recallHistory', JSON.stringify(history.slice(0, 8)));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        const history = JSON.parse(localStorage.getItem('recallHistory') || "[]");
-        const list = document.getElementById('score-list');
-        list.innerHTML = history.map(h => `
-            <div class="score-item">
-                <span>Round at ${h.time}</span>
-                <span class="score-val">${h.score}/${h.max}</span>
-            </div>
-        `).join('');
-    }
-
-    renderHistory();
-</script>
-
+        window.onload = () => {
+            setMsg("Ready to play?");
+        };
+    </script>
 </body>
 </html>
